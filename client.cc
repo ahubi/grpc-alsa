@@ -4,17 +4,14 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include "gprc-alsa.grpc.pb.h"
+//#include "gprc-alsa.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-using gprc-alsa::HelloRequest;
-using gprc-alsa::HelloReply;
-using gprc-alsa::Greeter;
-using gprc-alsa::AudioData;
-using gprc-alsa::PlayStatus;
-using grpc::ClientWriter;
+//using gprc-alsa::AudioData;
+//using gprc-alsa::PlayStatus;
+//using grpc::ClientWriter;
 using grpc::ClientContext;
 
 
