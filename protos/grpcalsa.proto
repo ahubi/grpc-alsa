@@ -15,11 +15,11 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "io.grpc.examples.grpc-alsa";
+option java_package = "io.grpc.examples.grpcalsa";
 option java_outer_classname = "GrpcAlsa";
 option objc_class_prefix = "GAL";
 
-package gprc-alsa;
+package grpcalsa;
 
 // The greeting service definition.
 service GrpcAlsa {

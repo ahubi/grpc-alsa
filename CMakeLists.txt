@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5.1)
 
-project(grpc-alsa C CXX)
+project(grpcalsa C CXX)
 
 if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -126,7 +126,9 @@ endif()
 #find_package(gRPC CONFIG REQUIRED)
 message(STATUS "Using gRPC ${gRPC_VERSION}")
 
-set(_GRPC_GRPCPP gRPC::grpc++)
+#set(_GRPC_GRPCPP gRPC::grpc++)
+set(_GRPC_GRPCPP grpc++)
+set (CMAKE_CROSSCOMPILING ON)
 if(CMAKE_CROSSCOMPILING)
   find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
 else()
@@ -134,14 +136,14 @@ else()
 endif()
 
 # Proto file
-get_filename_component(hw_proto "protos/grpc-alsa.proto" ABSOLUTE)
+get_filename_component(hw_proto "protos/grpcalsa.proto" ABSOLUTE)
 get_filename_component(hw_proto_path "${hw_proto}" PATH)
 
 # Generated sources
-set(hw_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/gprc-alsa.pb.cc")
-set(hw_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/gprc-alsa.pb.h")
-set(hw_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/gprc-alsa.grpc.pb.cc")
-set(hw_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/gprc-alsa.grpc.pb.h")
+set(hw_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/grpcalsa.pb.cc")
+set(hw_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/grpcalsa.pb.h")
+set(hw_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/grpcalsa.grpc.pb.cc")
+set(hw_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/grpcalsa.grpc.pb.h")
 
 add_custom_command(
       OUTPUT "${hw_proto_srcs}" "${hw_proto_hdrs}" "${hw_grpc_srcs}" "${hw_grpc_hdrs}"
@@ -156,18 +158,18 @@ add_custom_command(
 # Include generated *.pb.h files
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
-add_executable(client client.cc)
-target_link_libraries(client grpc++)
+#add_executable(client client.cc)
+#target_link_libraries(client grpc++)
 
-# Targets greeter_[async_](client|server)
-# foreach(_target
-#   client
-#   server)
-#   add_executable(${_target} "${_target}.cc"
-#     ${hw_proto_srcs}
-#     ${hw_grpc_srcs})
-#   target_link_libraries(${_target}
-#     ${_REFLECTION}
-#     ${_GRPC_GRPCPP}
-#     ${_PROTOBUF_LIBPROTOBUF})
-# endforeach()
+#Targets greeter_[async_](client|server)
+foreach(_target
+  client
+  server)
+  add_executable(${_target} "${_target}.cc"
+    ${hw_proto_srcs}
+    ${hw_grpc_srcs})
+  target_link_libraries(${_target}
+    ${_REFLECTION}
+    ${_GRPC_GRPCPP}
+    ${_PROTOBUF_LIBPROTOBUF})
+endforeach()
