@@ -17,8 +17,10 @@ using grpc::ServerReader;
 using grpcalsa::AudioData;
 using grpcalsa::PlayStatus;
 
+using namespace std;
 
 void RunServer() {
+  cout << __func__ << " gRPC" << endl;
 }
 
 int main(int argc, char** argv) {

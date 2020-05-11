@@ -11,7 +11,6 @@ endif()
 find_package(Threads REQUIRED)
 
 set(GRPC_FETCHCONTENT ON)
-set(CMAKE_INSTALL_PREFIX "build")
 
 if(GRPC_AS_SUBMODULE)
   # One way to build a projects that uses gRPC is to just include the
