@@ -64,7 +64,7 @@ class GrpcAlsaClient {
     Status status = reader->Finish();
     // Act upon its status.
     if (status.ok()) {
-      cout << "Done streaming with status: " << endl;
+      cout << "record data: " << d.data() << endl;
       return 0;
     } else {
       cout << status.error_code() << ": " << status.error_message()
@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
       target_str, grpc::InsecureChannelCredentials()));
   GrpcAlsaClient gac(channel);
   gac.PlayStream("Hello World");
-  char* buffer = new char[16];
+  char* buffer = new char[256];
   gac.RecordStream(buffer, sizeof(buffer));
   
   delete [] buffer;

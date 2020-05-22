@@ -14,9 +14,11 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 using grpc::ServerReader;
+using grpc::ServerWriter;
 using grpcalsa::GrpcAlsa;
 using grpcalsa::AudioData;
 using grpcalsa::PlayStatus;
+using grpcalsa::RecordRequest;
 
 using namespace std;
 
@@ -32,11 +34,17 @@ class GrpcAlsaServiceImpl final : public GrpcAlsa::Service {
     response->set_status(77);
     return Status::OK;
   }
-
+  Status RecordStream(ServerContext* context, const RecordRequest* request,
+                      ServerWriter<AudioData>* writer) {
+    AudioData data;
+    data.set_data("Thank you very much for the flowers");
+    writer->Write(data);
+    return Status::OK;
+  }
 };
 
 void RunServer() {
-  cout << "gRPC" << __func__ << endl;
+  cout << "gRPC " << __func__ << endl;
 
   std::string server_address("0.0.0.0:50051");
   GrpcAlsaServiceImpl service;
