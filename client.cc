@@ -39,6 +39,7 @@ class GrpcAlsaClient {
       unique_ptr<ClientWriter<AudioData> > writer(
             stub_->PlayStream(&context, &play_status));
       while (file.read(memblock, size)) {
+        cout << "write: " << size << " bytes" << endl; 
         d.set_data(memblock, size);
         bool s = writer->Write(d);
       }
@@ -62,16 +63,15 @@ class GrpcAlsaClient {
     return 0;
   }
 
-  int RecordStream(char* data, int size) {
+  int RecordStream(const char* data) {
     // Context for the client. It could be used to convey extra information to
     // the server and/or tweak certain RPC behaviors.
     ClientContext context;
     RecordRequest record_request;
-    record_request.set_duration(size);
+    record_request.set_duration(5);
     record_request.set_id(185);
     
     AudioData d;
-    d.set_data(data);
     unique_ptr<ClientReader<AudioData> > reader(
         stub_->RecordStream(&context, record_request));
 
@@ -80,7 +80,8 @@ class GrpcAlsaClient {
     // Act upon its status.
     if (status.ok()) {
       cout << "record data: " << d.data() << endl;
-      return 0;
+      data = d.data().data();
+      return d.data().size();
     } else {
       cout << status.error_code() << ": " << status.error_message()
                 << endl;
@@ -117,10 +118,11 @@ int main(int argc, char** argv) {
   std::shared_ptr<Channel> channel(grpc::CreateChannel(
       target_str, grpc::InsecureChannelCredentials()));
   GrpcAlsaClient gac(channel);
-  gac.PlayStream("Hello World");
-  char* buffer = new char[256];
-  //gac.RecordStream(buffer, sizeof(buffer));
   
-  delete [] buffer;
+  gac.PlayStream("Hello World");
+  char* buffer;
+  
+  gac.RecordStream(buffer);
+  
   return 0;
 }
