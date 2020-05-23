@@ -164,11 +164,12 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 foreach(_target
   client
   server)
-  add_executable(${_target} "${_target}.cc"
+  add_executable(${_target} "${_target}.cc" "alsawrapper.cc"
     ${hw_proto_srcs}
     ${hw_grpc_srcs})
   target_link_libraries(${_target}
     ${_REFLECTION}
     ${_GRPC_GRPCPP}
-    ${_PROTOBUF_LIBPROTOBUF})
+    ${_PROTOBUF_LIBPROTOBUF}
+    "libasound.so")
 endforeach()
