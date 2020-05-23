@@ -8,6 +8,7 @@
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 
 #include "grpcalsa.grpc.pb.h"
+#include "alsawrapper.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -24,12 +25,24 @@ using namespace std;
 
 // Logic and data behind the server's behavior.
 class GrpcAlsaServiceImpl final : public GrpcAlsa::Service {
+public:
+  GrpcAlsaServiceImpl(){
+    alsareader_ = new AlsaWrapper(SND_PCM_STREAM_CAPTURE);
+    alsawriter_ = new AlsaWrapper(SND_PCM_STREAM_PLAYBACK);
+  }
+  ~GrpcAlsaServiceImpl(){
+    if(alsareader_)
+      delete alsareader_; 
+    if(alsawriter_)
+      delete alsawriter_; 
+  }
   Status PlayStream(ServerContext* context, 
                     ServerReader<AudioData>* reader, 
                     PlayStatus* response){
     AudioData data;
     while (reader->Read(&data)) {
-      std::cout << "read data: " << data.data() << std::endl;
+      //std::cout << "read data: " << data.data().size() << endl;
+      alsawriter_->write(data.data().data(), data.data().size());
     }
     response->set_status(77);
     return Status::OK;
@@ -37,10 +50,15 @@ class GrpcAlsaServiceImpl final : public GrpcAlsa::Service {
   Status RecordStream(ServerContext* context, const RecordRequest* request,
                       ServerWriter<AudioData>* writer) {
     AudioData data;
-    data.set_data("Thank you very much for the flowers");
+    //data.set_data("Thank you very much for the flowers");
+    alsareader_->read((char*)data.mutable_data(), alsareader_->buffersize());
     writer->Write(data);
     return Status::OK;
   }
+private:
+ AlsaWrapper* alsawriter_;
+ AlsaWrapper* alsareader_;
+
 };
 
 void RunServer() {

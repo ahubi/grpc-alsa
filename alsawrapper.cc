@@ -1,26 +1,57 @@
 #include "alsawrapper.h"
 
-AlsaWrapper::AlsaWrapper(int access)
+AlsaWrapper::AlsaWrapper(int stream)
 : device_(default_device) 
-, access_((snd_pcm_access_t)access)
+, stream_((snd_pcm_stream_t)stream)
 , period_size_(1024)
 , buffer_size_(period_size_*4)
-, rate_(48000)
+, rate_(24000)
 , channels_(1)
 , sample_size_(2)
 , format_(SND_PCM_FORMAT_S16)
 , handle_(0)
-{}
-
-AlsaWrapper::~AlsaWrapper(){
-
+, access_(SND_PCM_ACCESS_RW_INTERLEAVED){
+  int err;
+  if ((err = snd_pcm_open(&handle_, device_.c_str(), stream_, 0)) == 0){
+    cout << "alsa device opened " << device_ << endl;
+    if (set_hw_params() < 0){
+      cerr << "set_hw_params failed" << endl;
+      if ((err=snd_pcm_close(handle_)) < 0){
+        cerr << "snd_pcm_close " << snd_strerror(err) << endl;
+      }
+    }
+  }else{
+    cerr << "snd_pcm_open " << snd_strerror(err) << endl;
+    handle_ = 0;
+  }
 }
+
+AlsaWrapper::~AlsaWrapper() {
+  int err;
+  if (handle_)
+    if ((err = snd_pcm_close(handle_)) < 0) {
+      cerr << "snd_pcm_close " << snd_strerror(err) << endl;
+    }
+}
+
 long AlsaWrapper::read(char* buffer, const long size){
-  return 0;
+  snd_pcm_sframes_t frames;
+  if(good() && readable()){
+    while((frames = snd_pcm_readi(handle_, buffer, framesize(size))<0))
+      if (snd_pcm_recover(handle_, frames, 0) < 0)
+        return -1;
+  }
+  return frames;
 }
 
 long AlsaWrapper::write(const char* buffer, const long size){
-  return 0;
+  snd_pcm_sframes_t frames;
+  if(good() && writable()){
+    while((frames = snd_pcm_writei(handle_, buffer, framesize(size))<0))
+      if (snd_pcm_recover(handle_, frames, 0) < 0)
+        return -1;
+  }
+  return frames;
 }
 
 int AlsaWrapper::set_hw_params(){
@@ -82,21 +113,4 @@ int AlsaWrapper::set_hw_params(){
     return err;
   }
   return 0;
-}
-int AlsaWrapper::xrun_recovery(int err) {
-  if (err == -EPIPE) { /* under-run */
-    if ((err = snd_pcm_prepare(handle_)) < 0)
-      cerr << "snd_pcm_prepare " << snd_strerror(err) << endl;
-    return 0;
-  } else if (err == -ESTRPIPE) {
-    while ((err = snd_pcm_resume(handle_)) == -EAGAIN)
-      sleep(1); /* wait until the suspend flag is released */
-    if (err < 0) {
-      err = snd_pcm_prepare(handle_);
-      if (err < 0)
-        cerr << "snd_pcm_prepare: " << snd_strerror(err) << endl;
-    }
-    return 0;
-  }
-  return err;
 }

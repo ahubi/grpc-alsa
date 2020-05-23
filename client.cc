@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <fstream>
 
 #include "grpcalsa.grpc.pb.h"
 
@@ -27,24 +28,38 @@ class GrpcAlsaClient {
     // the server and/or tweak certain RPC behaviors.
     ClientContext context;
     PlayStatus play_status;
-    
-    AudioData d;
-    d.set_data(data);
-    unique_ptr<ClientWriter<AudioData> > writer(
-        stub_->PlayStream(&context, &play_status));
-
-    bool s = writer->Write(d);
-    writer->WritesDone();
-    Status status = writer->Finish();
-    // Act upon its status.
-    if (status.ok()) {
-      cout << "Done streaming with status: " << play_status.status() << std::endl;
-      return 0;
-    } else {
-      std::cout << status.error_code() << ": " << status.error_message()
-                << std::endl;
-      return -1;
+    ifstream file("../sine_16bit_1ch_24000Hz.wav",
+                  ios::in | ios::binary | ios::ate);
+    int size = 1024;
+    char* memblock = new char[size];  
+    if (file.is_open()) {
+      cout << "file opened" << endl;
+      file.seekg(0, ios::beg);
+      AudioData d;
+      unique_ptr<ClientWriter<AudioData> > writer(
+            stub_->PlayStream(&context, &play_status));
+      while (file.read(memblock, size)) {
+        d.set_data(memblock, size);
+        bool s = writer->Write(d);
+      }
+      writer->WritesDone();
+      Status status = writer->Finish();
+      // Act upon its status.
+      if (status.ok()) {
+        cout << "Done streaming with status: " << play_status.status()
+             << std::endl;
+      } else {
+        std::cout << status.error_code() << ": " << status.error_message()
+                  << std::endl;
+      }
+    }else
+    {
+      cerr << "file not open" << endl;
     }
+    
+    delete [] memblock;
+    file.close();
+    return 0;
   }
 
   int RecordStream(char* data, int size) {
@@ -104,7 +119,7 @@ int main(int argc, char** argv) {
   GrpcAlsaClient gac(channel);
   gac.PlayStream("Hello World");
   char* buffer = new char[256];
-  gac.RecordStream(buffer, sizeof(buffer));
+  //gac.RecordStream(buffer, sizeof(buffer));
   
   delete [] buffer;
   return 0;
