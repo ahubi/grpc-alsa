@@ -29,19 +29,21 @@ public:
   GrpcAlsaServiceImpl(){
     alsareader_ = new AlsaWrapper(SND_PCM_STREAM_CAPTURE);
     alsawriter_ = new AlsaWrapper(SND_PCM_STREAM_PLAYBACK);
+    buffer_ = new char[alsareader_->periodsize()];
   }
   ~GrpcAlsaServiceImpl(){
     if(alsareader_)
       delete alsareader_; 
     if(alsawriter_)
-      delete alsawriter_; 
+      delete alsawriter_;
+    if (buffer_)
+      delete [] buffer_;
   }
   Status PlayStream(ServerContext* context, 
                     ServerReader<AudioData>* reader, 
                     PlayStatus* response){
     AudioData data;
     while (reader->Read(&data)) {
-      //std::cout << "read data: " << data.data().size() << endl;
       alsawriter_->write(data.data().data(), data.data().size());
     }
     response->set_status(77);
@@ -50,14 +52,15 @@ public:
   Status RecordStream(ServerContext* context, const RecordRequest* request,
                       ServerWriter<AudioData>* writer) {
     AudioData data;
-    //data.set_data("Thank you very much for the flowers");
-    alsareader_->read((char*)data.mutable_data(), alsareader_->buffersize());
+    long readsize = alsareader_->read(buffer_, alsareader_->periodsize());
+    data.set_data(buffer_, readsize);
     writer->Write(data);
     return Status::OK;
   }
 private:
  AlsaWrapper* alsawriter_;
  AlsaWrapper* alsareader_;
+ char* buffer_;
 
 };
 
