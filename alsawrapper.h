@@ -21,6 +21,9 @@ class AlsaWrapper {
   inline long framesize() {return channels_*sample_size_;};
   inline long buffersize() {return buffer_size_;};
   inline long periodsize() {return period_size_;};
+  inline uint rate() {return rate_;};
+  inline uint fromat() {return format_;};
+  inline uint samplesize() {return sample_size_;};
  private:
   AlsaWrapper();
   AlsaWrapper(AlsaWrapper&);
@@ -32,9 +35,9 @@ class AlsaWrapper {
   snd_pcm_stream_t stream_;
   snd_pcm_sframes_t period_size_;
   snd_pcm_sframes_t buffer_size_;
-  unsigned int rate_;
-  unsigned int channels_;
-  unsigned sample_size_;
+  uint rate_;
+  uint channels_;
+  uint sample_size_;
   snd_pcm_format_t format_;
   snd_pcm_t* handle_;
   snd_pcm_access_t access_;

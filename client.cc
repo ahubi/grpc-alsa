@@ -16,6 +16,9 @@ using grpcalsa::AudioData;
 using grpcalsa::GrpcAlsa;
 using grpcalsa::PlayStatus;
 using grpcalsa::RecordRequest;
+using grpcalsa::StreamType;
+using grpcalsa::StreamParameter;
+
 using namespace std;
 
 class GrpcAlsaClient {
@@ -23,21 +26,26 @@ class GrpcAlsaClient {
   GrpcAlsaClient(std::shared_ptr<Channel> channel)
       : stub_(GrpcAlsa::NewStub(channel)) {}
 
-  int PlayStream(const char* data) {
+  int PlayStream(string filename) {
     // Context for the client. It could be used to convey extra information to
     // the server and/or tweak certain RPC behaviors.
-    ClientContext context;
+    ClientContext context, ctx;
     PlayStatus play_status;
-    ifstream file("../sine_16bit_1ch_24000Hz.wav",
-                  ios::in | ios::binary | ios::ate);
-    int size = 1024*2;
-    char* memblock = new char[size];  
+    StreamParameter sp;
+    StreamType st;
+    ifstream file(filename, ios::in | ios::binary | ios::ate);
+    
+    //Get alsa related parameter from server
+    Status s = stub_->GetStreamParameter(&ctx, st, &sp);
+    int size = sp.buffersize() > 0 ? sp.buffersize() : 1024;
+    char* memblock = new char[size];
+      
     if (file.is_open()) {
-      cout << "file opened" << endl;
+      cout << "playing file: " << filename << endl;
       file.seekg(0, ios::beg);
-      AudioData d;
       unique_ptr<ClientWriter<AudioData> > writer(
             stub_->PlayStream(&context, &play_status));
+      AudioData d;
       while (file.read(memblock, size)) {
         d.set_data(memblock, size);
         bool s = writer->Write(d);
@@ -54,7 +62,7 @@ class GrpcAlsaClient {
       }
     }else
     {
-      cerr << "file not open" << endl;
+      cerr << "file not open: " << strerror(errno) << endl;
     }
     
     delete [] memblock;
@@ -68,7 +76,7 @@ class GrpcAlsaClient {
     ClientContext context;
     RecordRequest record_request;
     record_request.set_duration(5);
-    record_request.set_id(185);
+    record_request.set_id(10);
     
     AudioData d;
     unique_ptr<ClientReader<AudioData> > reader(
@@ -121,10 +129,9 @@ int main(int argc, char** argv) {
   cout << "gRPC client started " << target_str << endl;
   std::shared_ptr<Channel> channel(grpc::CreateChannel(
       target_str, grpc::InsecureChannelCredentials()));
-  GrpcAlsaClient gac(channel);
-  
-  gac.PlayStream("Hello World");
-  gac.RecordStream("recorded_stream.wav");
+  GrpcAlsaClient gaclient(channel);
+  gaclient.PlayStream("../sine_16bit_1ch_24000Hz.wav");
+  gaclient.RecordStream("recorded_stream.wav");
   
   return 0;
 }

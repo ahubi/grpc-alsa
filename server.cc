@@ -20,6 +20,8 @@ using grpcalsa::GrpcAlsa;
 using grpcalsa::AudioData;
 using grpcalsa::PlayStatus;
 using grpcalsa::RecordRequest;
+using grpcalsa::StreamType;
+using grpcalsa::StreamParameter;
 
 using namespace std;
 
@@ -41,7 +43,7 @@ public:
       alsa_writer->write(data.data().data(), data.data().size());
   
     alsa_writer->drain();
-    response->set_status(77);
+    response->set_status(0);
     cout << "<-- " << __func__ << endl;
     return Status::OK;
   }
@@ -52,7 +54,7 @@ public:
     unique_ptr<AlsaWrapper> alsareader(new AlsaWrapper(SND_PCM_STREAM_CAPTURE));
     long size = alsareader->periodsize()*alsareader->framesize();
     char* buffer = new char[size];
-  
+    //Record 10 x period size to have longer recordings
     for (size_t i = 0; i < request->duration()*10; i++)
     {
       long readsize = alsareader->read(buffer, size);
@@ -61,6 +63,18 @@ public:
     }
     if (buffer)
       delete [] buffer;
+    cout << "<-- " << __func__ << endl;
+    return Status::OK;
+  }
+  Status GetStreamParameter(ServerContext* context, 
+                            const StreamType* request, 
+                            StreamParameter* response) override {
+    cout << "--> " << __func__ << endl;
+    unique_ptr<AlsaWrapper> a(new AlsaWrapper(SND_PCM_STREAM_PLAYBACK));                          
+    response->set_buffersize(a->periodsize()*a->framesize());
+    response->set_format(a->fromat());
+    response->set_framerate(a->rate());
+    response->set_samplesize(a->samplesize());
     cout << "<-- " << __func__ << endl;
     return Status::OK;
   }

@@ -25,6 +25,7 @@ package grpcalsa;
 service GrpcAlsa {
   rpc PlayStream(stream AudioData) returns (PlayStatus){}
   rpc RecordStream(RecordRequest) returns (stream AudioData){}
+  rpc GetStreamParameter(StreamType) returns (StreamParameter){}
 }
 
 message AudioData{
@@ -38,4 +39,13 @@ message PlayStatus{
 message RecordRequest{
   int32 id = 1;
   int32 duration = 2;
+}
+message StreamType{
+  int32 type = 1;
+}
+message StreamParameter{
+  int32 buffersize = 1;
+  int32 framerate = 2;
+  int32 format = 3;
+  int32 samplesize = 4;
 }
