@@ -30,7 +30,7 @@ class GrpcAlsaClient {
     PlayStatus play_status;
     ifstream file("../sine_16bit_1ch_24000Hz.wav",
                   ios::in | ios::binary | ios::ate);
-    int size = 1024;
+    int size = 1024*2;
     char* memblock = new char[size];  
     if (file.is_open()) {
       cout << "file opened" << endl;
@@ -39,7 +39,6 @@ class GrpcAlsaClient {
       unique_ptr<ClientWriter<AudioData> > writer(
             stub_->PlayStream(&context, &play_status));
       while (file.read(memblock, size)) {
-        cout << "write: " << size << " bytes" << endl; 
         d.set_data(memblock, size);
         bool s = writer->Write(d);
       }
@@ -63,7 +62,7 @@ class GrpcAlsaClient {
     return 0;
   }
 
-  int RecordStream(const char* data) {
+  int RecordStream(string filename) {
     // Context for the client. It could be used to convey extra information to
     // the server and/or tweak certain RPC behaviors.
     ClientContext context;
@@ -74,19 +73,24 @@ class GrpcAlsaClient {
     AudioData d;
     unique_ptr<ClientReader<AudioData> > reader(
         stub_->RecordStream(&context, record_request));
+    ofstream file(filename, ios::out | ios::binary);
+    if (file.is_open()) {
 
-    bool s = reader->Read(&d);
-    Status status = reader->Finish();
-    // Act upon its status.
-    if (status.ok()) {
-      cout << "record data: " << d.data() << endl;
-      data = d.data().data();
-      return d.data().size();
-    } else {
-      cout << status.error_code() << ": " << status.error_message()
-                << endl;
-      return -1;
+      while(reader->Read(&d)){
+        file.write(d.data().data(), d.data().size());
+      }
+      Status status = reader->Finish();
+      file.close();
+      // Act upon its status.
+      if (status.ok()) {
+        cout << "finished reading status OK" << endl;
+        return 0;
+      } else {
+        cout << status.error_code() << ": " << status.error_message() << endl;
+        return -1;
+      }
     }
+    return 0;
   }
 
  private:
@@ -120,9 +124,7 @@ int main(int argc, char** argv) {
   GrpcAlsaClient gac(channel);
   
   gac.PlayStream("Hello World");
-  char* buffer;
-  
-  gac.RecordStream(buffer);
+  gac.RecordStream("recorded_stream.wav");
   
   return 0;
 }

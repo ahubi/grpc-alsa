@@ -26,40 +26,44 @@ using namespace std;
 // Logic and data behind the server's behavior.
 class GrpcAlsaServiceImpl final : public GrpcAlsa::Service {
 public:
-  GrpcAlsaServiceImpl(){
-    alsareader_ = new AlsaWrapper(SND_PCM_STREAM_CAPTURE);
-    alsawriter_ = new AlsaWrapper(SND_PCM_STREAM_PLAYBACK);
-    buffer_ = new char[alsareader_->periodsize()];
-  }
-  ~GrpcAlsaServiceImpl(){
-    if(alsareader_)
-      delete alsareader_; 
-    if(alsawriter_)
-      delete alsawriter_;
-    if (buffer_)
-      delete [] buffer_;
-  }
+  GrpcAlsaServiceImpl(){}
+  ~GrpcAlsaServiceImpl(){}
+  
   Status PlayStream(ServerContext* context, 
                     ServerReader<AudioData>* reader, 
                     PlayStatus* response){
+    cout << "--> " << __func__ << endl;
     AudioData data;
+    
+    unique_ptr<AlsaWrapper> alsa_writer(new AlsaWrapper(SND_PCM_STREAM_PLAYBACK));
+
     while (reader->Read(&data)) {
-      alsawriter_->write(data.data().data(), data.data().size());
+      alsa_writer->write(data.data().data(), data.data().size());
     }
+    alsa_writer->drain();
     response->set_status(77);
+    cout << "<-- " << __func__ << endl;
     return Status::OK;
   }
   Status RecordStream(ServerContext* context, const RecordRequest* request,
                       ServerWriter<AudioData>* writer) {
+    cout << "--> " << __func__ << endl;
     AudioData data;
-    long readsize = alsareader_->read(buffer_, alsareader_->periodsize());
-    data.set_data(buffer_, readsize);
-    writer->Write(data);
+    unique_ptr<AlsaWrapper> alsareader(new AlsaWrapper(SND_PCM_STREAM_CAPTURE));
+    char* buffer = new char[alsareader->periodsize()];
+  
+    for (size_t i = 0; i < request->duration()*10; i++)
+    {
+      long readsize = alsareader->read(buffer, alsareader->periodsize());
+      data.set_data(buffer, readsize);
+      writer->Write(data);
+    }
+    if (buffer)
+      delete [] buffer;
+    cout << "<-- " << __func__ << endl;
     return Status::OK;
   }
 private:
- AlsaWrapper* alsawriter_;
- AlsaWrapper* alsareader_;
  char* buffer_;
 
 };

@@ -13,6 +13,7 @@ class AlsaWrapper {
   ~AlsaWrapper();
   long read(char* buffer, const long size);
   long write(const char* buffer, const long size);
+  int drain(){return snd_pcm_drain(handle_);};
   inline bool good(){return handle_ != 0;};
   inline bool readable() {return stream_ == SND_PCM_STREAM_CAPTURE;};
   inline bool writable() {return stream_ == SND_PCM_STREAM_PLAYBACK;};

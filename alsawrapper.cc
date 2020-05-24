@@ -37,17 +37,19 @@ AlsaWrapper::~AlsaWrapper() {
 long AlsaWrapper::read(char* buffer, const long size){
   snd_pcm_sframes_t frames;
   if(good() && readable()){
-    while((frames = snd_pcm_readi(handle_, buffer, framesize(size))<0))
+    if((frames = snd_pcm_readi(handle_, buffer, framesize(size))<0))
+      cerr << "error reading from alsa: " << snd_strerror(frames) << endl;
       if (snd_pcm_recover(handle_, frames, 0) < 0)
         return -1;
   }
-  return frames;
+  return size;
 }
 
 long AlsaWrapper::write(const char* buffer, const long size){
   snd_pcm_sframes_t frames;
   if(good() && writable()){
-    while((frames = snd_pcm_writei(handle_, buffer, framesize(size))<0))
+    if((frames = snd_pcm_writei(handle_, buffer, framesize(size))<0))
+      cerr << "error writing to alsa: " << snd_strerror(frames) << endl;
       if (snd_pcm_recover(handle_, frames, 0) < 0)
         return -1;
   }
