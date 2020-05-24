@@ -37,9 +37,9 @@ public:
     
     unique_ptr<AlsaWrapper> alsa_writer(new AlsaWrapper(SND_PCM_STREAM_PLAYBACK));
 
-    while (reader->Read(&data)) {
+    while (reader->Read(&data))
       alsa_writer->write(data.data().data(), data.data().size());
-    }
+  
     alsa_writer->drain();
     response->set_status(77);
     cout << "<-- " << __func__ << endl;
@@ -50,11 +50,12 @@ public:
     cout << "--> " << __func__ << endl;
     AudioData data;
     unique_ptr<AlsaWrapper> alsareader(new AlsaWrapper(SND_PCM_STREAM_CAPTURE));
-    char* buffer = new char[alsareader->periodsize()];
+    long size = alsareader->periodsize()*alsareader->framesize();
+    char* buffer = new char[size];
   
     for (size_t i = 0; i < request->duration()*10; i++)
     {
-      long readsize = alsareader->read(buffer, alsareader->periodsize());
+      long readsize = alsareader->read(buffer, size);
       data.set_data(buffer, readsize);
       writer->Write(data);
     }
@@ -63,9 +64,6 @@ public:
     cout << "<-- " << __func__ << endl;
     return Status::OK;
   }
-private:
- char* buffer_;
-
 };
 
 void RunServer() {
@@ -93,6 +91,5 @@ void RunServer() {
 
 int main(int argc, char** argv) {
   RunServer();
-
   return 0;
 }
