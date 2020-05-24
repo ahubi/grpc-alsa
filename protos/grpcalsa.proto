@@ -21,7 +21,7 @@ option objc_class_prefix = "GAL";
 
 package grpcalsa;
 
-// The greeting service definition.
+//Service definition
 service GrpcAlsa {
   rpc PlayStream(stream AudioData) returns (PlayStatus){}
   rpc RecordStream(RecordRequest) returns (stream AudioData){}
