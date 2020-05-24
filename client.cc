@@ -39,7 +39,7 @@ class GrpcAlsaClient {
     Status s = stub_->GetStreamParameter(&ctx, st, &sp);
     int size = sp.buffersize() > 0 ? sp.buffersize() : 1024;
     char* memblock = new char[size];
-      
+
     if (file.is_open()) {
       cout << "playing file: " << filename << endl;
       file.seekg(0, ios::beg);
@@ -83,7 +83,7 @@ class GrpcAlsaClient {
         stub_->RecordStream(&context, record_request));
     ofstream file(filename, ios::out | ios::binary);
     if (file.is_open()) {
-
+      cout << "recording to file: " << filename << endl;
       while(reader->Read(&d)){
         file.write(d.data().data(), d.data().size());
       }
@@ -91,7 +91,7 @@ class GrpcAlsaClient {
       file.close();
       // Act upon its status.
       if (status.ok()) {
-        cout << "finished reading status OK" << endl;
+        cout << "finished recording with status OK" << endl;
         return 0;
       } else {
         cout << status.error_code() << ": " << status.error_message() << endl;
