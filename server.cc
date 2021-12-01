@@ -83,7 +83,7 @@ public:
 void RunServer() {
   cout << "gRPC " << __func__ << endl;
 
-  std::string server_address("0.0.0.0:50051");
+  std::string server_address("localhost:50051");
   GrpcAlsaServiceImpl service;
 
   grpc::EnableDefaultHealthCheckService(true);

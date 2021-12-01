@@ -17,8 +17,8 @@ class AlsaWrapper {
   inline bool good(){return handle_ != 0;};
   inline bool readable() {return stream_ == SND_PCM_STREAM_CAPTURE;};
   inline bool writable() {return stream_ == SND_PCM_STREAM_PLAYBACK;};
-  inline long framesize(unsigned int size) {return size / (channels_*sample_size_);};
   inline long framesize() {return channels_*sample_size_;};
+  inline long framesize(unsigned int size) {return size / framesize();};
   inline long buffersize() {return buffer_size_;};
   inline long periodsize() {return period_size_;};
   inline uint rate() {return rate_;};

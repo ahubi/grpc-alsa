@@ -18,3 +18,18 @@ Please see protos folder for complete definition.
 Tested with ubuntu 20.04, gcc 7.4.0. Please install all required prerequisites for grpc, see grpc documentation.
 This project pulls grpc from github and builds it from source.
 Check cmake files for details.
+
+## Test
+Start the server in new console window
+```
+./server
+```
+Start the client in a new console window
+```
+./client
+```
+Observe the sine tone payed on pc speakers.
+After sine tone is played a stream is recorded from pc microphone. The recorded stream can be played by issuing
+```
+aplay -r 24000 recorded_stream.wav 
+```

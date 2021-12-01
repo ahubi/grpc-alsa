@@ -37,6 +37,8 @@ class GrpcAlsaClient {
     
     //Get alsa related parameter from server
     Status s = stub_->GetStreamParameter(&ctx, st, &sp);
+    cout << "GetStreamParameter format: " << sp.format() << " frate: " 
+          << sp.framerate() << " sample size: " << sp.samplesize() << " buffer size: " << sp.buffersize() << endl;
     int size = sp.buffersize() > 0 ? sp.buffersize() : 1024;
     char* memblock = new char[size];
 
