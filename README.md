@@ -1,4 +1,10 @@
-# grpcalsa
+# gRPC
+
+https://grpc.io/
+
+https://grpc.io/docs/what-is-grpc/introduction/
+
+# gRPCalsa
 This project demonstrates how to access ALSA backend via grpc. It uses streaming capabilities of grpc and ALSA to play / record audio. The server implements the grpc interface and has access to ALSA. The client is using the grpc interface for sending pcm samples to server and receiving pcm samples. First client plays a sine tone of 5 seconds and then records from microphone 5 seconds of data.
 
 ![Architecture](/doc/architecture.png)
